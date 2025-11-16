@@ -15,8 +15,8 @@ h1,h2,h3 {color:#0b3d91;}
 .btn {padding:0.5rem 1rem;border:none;border-radius:5px;cursor:pointer;}
 .btn-primary {background:#0b3d91;color:#fff;}
 .btn-success {background:#28a745;color:#fff;}
-/* Modal styles added */
-.modal {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;}
+/* Modal styles */
+.modal {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index: 1000;}
 .modal-content {background:#fff;padding:2rem;border-radius:10px;width:90%;max-width:400px;position:relative;}
 .modal-content label, .modal-content input {display:block;width:100%;margin-top:0.5rem; margin-bottom: 0.5rem;}
 </style>
@@ -103,6 +103,7 @@ function closeModal(id) {
     document.getElementById(id).style.display = 'none';
 }
 
+// Close modal if user clicks outside the content box
 document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
@@ -126,7 +127,7 @@ function showMenu() {
   });
 }
 
-// ===== Add to Cart =====
+// ===== Add to Cart (Used by menu buttons) =====
 function addToCart(id){
   const veg = vegetables.find(v=>v.id===id);
   const existing = cart.find(c=>c.id===id);
@@ -135,7 +136,7 @@ function addToCart(id){
   updateCart();
 }
 
-// ===== Update Cart Counter =====
+// ===== Update Cart Counter in Header =====
 function updateCart(){
   document.getElementById('nav-cart').textContent = Cart (${cart.reduce((a,b)=>a+b.qty,0)});
 }
@@ -156,6 +157,7 @@ function renderCartItems() {
     cart.forEach(item=>{
       const div = document.createElement('div');
       div.className='card';
+      // Display item details and current total for the item
       div.innerHTML=`<p>${item.name} - $${(item.price*item.qty).toFixed(2)}</p>
       <div style="display:flex; align-items:center;">
         <button class="btn" onclick="changeQuantity(${item.id}, -1)" style="background:#ff9900; color:#fff; margin-right:5px; padding: 0.3rem 0.6rem;">-</button>
@@ -172,7 +174,7 @@ function renderCartItems() {
   document.getElementById('cart-total').textContent = total.toFixed(2);
 }
 
-// ===== Change Quantity (Increments/Decrements item count) =====
+// ===== Change Quantity (Increments/Decrements item count from cart view) =====
 function changeQuantity(id, delta) {
     const item = cart.find(c => c.id === id);
     if (item) {
@@ -193,7 +195,6 @@ function removeFromCart(id){
   updateCart();
   renderCartItems(); 
   if(cart.length === 0) {
-      // Go back to the home screen if cart is empty
       document.getElementById('cart-section').style.display='none';
       document.getElementById('home').style.display='block';
   }
