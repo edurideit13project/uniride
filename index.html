@@ -5,7 +5,15 @@
 <title>FreshBite Campus Market</title>
 <style>
 body {font-family: Arial, sans-serif; margin:0; background:#f7f7f7;}
-header {background:#4CAF50; color:white; padding:20px; text-align:center;}
+header {
+    background: url('logo.jpg') no-repeat center center;
+    background-size: cover; /* use 'contain' if you want the full logo to fit */
+    color:white;
+    padding:100px 20px; /* increase height so logo shows nicely */
+    text-align:center;
+}
+header h1, header p { text-shadow: 2px 2px 4px rgba(0,0,0,0.6); }
+
 .container {width:90%; max-width:500px; margin:25px auto; background:white; padding:25px; border-radius:10px; box-shadow:0 0 10px #ccc;}
 input, select, button {width:100%; padding:12px; margin:8px 0; border:1px solid #ccc; border-radius:5px;}
 button {background:#4CAF50; color:white; cursor:pointer; font-weight:bold;}
