@@ -81,6 +81,7 @@ h2,h3{color:#0b3d91;}
 </div>
 
 <script>
+// ====== Elements ======
 const modalSignup = document.getElementById('modal-signup');
 const modalLogin = document.getElementById('modal-login');
 const navLogin = document.getElementById('nav-login');
@@ -89,44 +90,56 @@ const navLogout = document.getElementById('nav-logout');
 const dashboard = document.getElementById('dashboard');
 const ridesList = document.getElementById('rides-list');
 
+// ====== Event Listeners ======
 navSignup.addEventListener('click', ()=>{ modalSignup.style.display='flex'; });
 navLogin.addEventListener('click', ()=>{ modalLogin.style.display='flex'; });
 document.querySelectorAll('.btn-close').forEach(btn=>btn.addEventListener('click', ()=>{ modalSignup.style.display='none'; modalLogin.style.display='none'; }));
 
+// ====== Data ======
+let users = JSON.parse(localStorage.getItem('users')||'[]');
+let rides = JSON.parse(localStorage.getItem('rides')||'[]');
 let currentUser = null;
 
-// ===== Signup =====
-document.getElementById('form-signup').addEventListener('submit', async e=>{
+// ====== Signup ======
+document.getElementById('form-signup').addEventListener('submit', e=>{
 e.preventDefault();
 const f = e.target;
-const res = await fetch('/api/signup', {
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({name:f.name.value,email:f.email.value,password:f.password.value,phone:f.phone.value,role:f.role.value})
-});
-const data = await res.json();
-if(res.ok){ currentUser = data.user; modalSignup.style.display='none'; renderDashboard(); updateNav(); } 
-else alert(data.message);
+if(users.find(u=>u.email===f.email.value)){ alert('Email exists!'); return; }
+const user = { id:Date.now(), name:f.name.value, email:f.email.value, password:f.password.value, phone:f.phone.value, role:f.role.value };
+users.push(user);
+localStorage.setItem('users', JSON.stringify(users));
+currentUser = user;
+modalSignup.style.display='none';
+renderDashboard();
+updateNav();
 });
 
-// ===== Login =====
-document.getElementById('form-login').addEventListener('submit', async e=>{
+// ====== Login ======
+document.getElementById('form-login').addEventListener('submit', e=>{
 e.preventDefault();
 const f = e.target;
-const res = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:f.email.value,password:f.password.value})});
-const data = await res.json();
-if(res.ok){ currentUser = data.user; modalLogin.style.display='none'; renderDashboard(); updateNav(); }
-else alert(data.message);
+const user = users.find(u=>u.email===f.email.value && u.password===f.password.value);
+if(!user){ alert('Invalid login'); return; }
+currentUser = user;
+modalLogin.style.display='none';
+renderDashboard();
+updateNav();
 });
 
+// ====== Logout ======
 navLogout.addEventListener('click', ()=>{ currentUser=null; dashboard.style.display='none'; updateNav(); });
 
-function updateNav(){ if(currentUser){ navLogin.style.display='none'; navSignup.style.display='none'; navLogout.style.display='inline-block'; } else{ navLogin.style.display='inline-block'; navSignup.style.display='inline-block'; navLogout.style.display='none'; } }
+// ====== Nav Update ======
+function updateNav(){
+if(currentUser){ navLogin.style.display='none'; navSignup.style.display='none'; navLogout.style.display='inline-block'; }
+else { navLogin.style.display='inline-block'; navSignup.style.display='inline-block'; navLogout.style.display='none'; }
+}
 
+// ====== Dashboard ======
 function renderDashboard(){
 dashboard.innerHTML=''; dashboard.style.display='block';
 if(currentUser.role==='driver'){
-const card=document.createElement('div'); card.className='card';
+const card = document.createElement('div'); card.className='card';
 card.innerHTML=`<h3>Driver Dashboard</h3>
 <form id='form-ride'>
 <label>Origin<input name='origin' required></label>
@@ -137,30 +150,40 @@ card.innerHTML=`<h3>Driver Dashboard</h3>
 <button class='btn btn-success' type='submit'>Post Ride</button>
 </form>`;
 dashboard.appendChild(card);
-document.getElementById('form-ride').addEventListener('submit', async e=>{
+document.getElementById('form-ride').addEventListener('submit', e=>{
 e.preventDefault();
 const f=e.target;
-const res = await fetch('/api/rides',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({driver:currentUser.name,origin:f.origin.value,destination:f.destination.value,datetime:f.datetime.value,seats:f.seats.value,price:f.price.value})});
-const data = await res.json();
-if(res.ok){ alert('Ride posted!'); f.reset(); renderRides(); }
+const ride = { id:Date.now(), driver:currentUser.name, origin:f.origin.value, destination:f.destination.value, datetime:f.datetime.value, seats:f.seats.value, price:f.price.value };
+rides.push(ride);
+localStorage.setItem('rides', JSON.stringify(rides));
+alert('Ride posted!');
+f.reset();
+renderRides();
 });
 }
 renderRides();
 }
 
-async function renderRides(){
-const res = await fetch('/api/rides');
-const rides = await res.json();
+// ====== Render Rides ======
+function renderRides(){
 ridesList.innerHTML='';
 if(rides.length===0){ ridesList.innerHTML='No rides available.'; return; }
 rides.forEach(r=>{
 const div=document.createElement('div'); div.className='card';
-div.innerHTML=<p><strong>Driver:</strong>${r.driver}</p><p><strong>From:</strong>${r.origin} <strong>To:</strong>${r.destination}</p><p><strong>Date/Time:</strong>${r.datetime}</p><p><strong>Seats:</strong>${r.seats} <strong>Price:</strong>$${r.price}</p>;
-if(currentUser && currentUser.role==='passenger'){ const btn=document.createElement('button'); btn.className='btn btn-primary'; btn.textContent='Request Ride'; btn.addEventListener('click', ()=>{ alert('Ride requested successfully!'); }); div.appendChild(btn); }
+div.innerHTML=`<p><strong>Driver:</strong>${r.driver}</p>
+<p><strong>From:</strong>${r.origin} <strong>To:</strong>${r.destination}</p>
+<p><strong>Date/Time:</strong>${r.datetime}</p>
+<p><strong>Seats:</strong>${r.seats} <strong>Price:</strong>$${r.price}</p>`;
+if(currentUser && currentUser.role==='passenger'){
+const btn=document.createElement('button'); btn.className='btn btn-primary'; btn.textContent='Request Ride';
+btn.addEventListener('click', ()=>{ alert('Ride requested successfully!'); });
+div.appendChild(btn);
+}
 ridesList.appendChild(div);
 });
 }
 
+// ====== Initial Render ======
 renderRides();
 </script>
 
