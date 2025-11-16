@@ -15,13 +15,15 @@ h2,h3{color:#0b3d91;}
 .btn{padding:0.5rem 1rem;border:none;border-radius:5px;cursor:pointer;}
 .btn-primary{background:#0b3d91;color:#fff;}
 .btn-success{background:#28a745;color:#fff;}
+.btn-edit{background:#ffc107;color:#fff;margin-left:0.5rem;}
 .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;display:flex;}
 .modal-content{background:#fff;padding:2rem;border-radius:10px;width:90%;max-width:400px;position:relative;}
 .modal-content label{display:block;margin:0.5rem 0;}
-.modal-content input{width:100%;padding:0.5rem;margin-top:0.2rem;}
+.modal-content input, .modal-content select{width:100%;padding:0.5rem;margin-top:0.2rem;}
 .modal-content fieldset{margin-top:1rem;border:none;}
 .form-actions{margin-top:1rem;display:flex;justify-content:space-between;}
 .btn-close{background:#ccc;}
+input, select{border-radius:5px;border:1px solid #ccc;}
 </style>
 </head>
 <body>
@@ -31,15 +33,27 @@ h2,h3{color:#0b3d91;}
 <nav>
   <button id="nav-signup">Sign Up</button>
   <button id="nav-login">Login</button>
+  <button id="nav-profile" style="display:none">Profile</button>
   <button id="nav-logout" style="display:none">Logout</button>
 </nav>
 </header>
 
 <div class="container">
 <section id="dashboard" style="display:none"></section>
+
 <section id="public-rides">
 <h3>Available Rides</h3>
+<div>
+  <input type="text" id="search-origin" placeholder="Filter by Origin">
+  <input type="text" id="search-destination" placeholder="Filter by Destination">
+  <button id="search-btn" class="btn btn-primary">Search</button>
+</div>
 <div id="rides-list">No rides available yet.</div>
+</section>
+
+<section id="my-rides" style="display:none">
+<h3>My Rides</h3>
+<div id="rides-history">No rides yet.</div>
 </section>
 </div>
 
@@ -80,20 +94,49 @@ h2,h3{color:#0b3d91;}
 </div>
 </div>
 
+<!-- Profile Modal -->
+<div class="modal" id="modal-profile">
+<div class="modal-content">
+<h3>Profile</h3>
+<form id="form-profile">
+  <label>Name<input name="name" required></label>
+  <label>Email<input type="email" name="email" required disabled></label>
+  <label>Phone<input name="phone"></label>
+  <fieldset>
+    <legend>Role</legend>
+    <select name="role">
+      <option value="passenger">Passenger</option>
+      <option value="driver">Driver</option>
+    </select>
+  </fieldset>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-success">Update</button>
+    <button type="button" class="btn btn-close">Close</button>
+  </div>
+</form>
+</div>
+</div>
+
 <script>
 // ===== Elements =====
 const modalSignup = document.getElementById('modal-signup');
 const modalLogin = document.getElementById('modal-login');
+const modalProfile = document.getElementById('modal-profile');
 const navLogin = document.getElementById('nav-login');
 const navSignup = document.getElementById('nav-signup');
 const navLogout = document.getElementById('nav-logout');
+const navProfile = document.getElementById('nav-profile');
 const dashboard = document.getElementById('dashboard');
 const ridesList = document.getElementById('rides-list');
+const searchOrigin = document.getElementById('search-origin');
+const searchDestination = document.getElementById('search-destination');
+const searchBtn = document.getElementById('search-btn');
 
 // ===== Event Listeners =====
 navSignup.addEventListener('click', ()=>{ modalSignup.style.display='flex'; });
 navLogin.addEventListener('click', ()=>{ modalLogin.style.display='flex'; });
-document.querySelectorAll('.btn-close').forEach(btn=>btn.addEventListener('click', ()=>{ modalSignup.style.display='none'; modalLogin.style.display='none'; }));
+navProfile.addEventListener('click', ()=>{ showProfile(); modalProfile.style.display='flex'; });
+document.querySelectorAll('.btn-close').forEach(btn=>btn.addEventListener('click', ()=>{ modalSignup.style.display='none'; modalLogin.style.display='none'; modalProfile.style.display='none'; }));
 
 // ===== Data =====
 let users = JSON.parse(localStorage.getItem('users')||'[]');
@@ -103,9 +146,9 @@ let currentUser = JSON.parse(localStorage.getItem('currentUser')||'null');
 // ===== Preload some rides if empty =====
 if(rides.length===0){
 rides = [
-  {id:1,driver:"Kwame",origin:"Campus A",destination:"Campus B",datetime:"2025-11-17T09:00",seats:3,price:2},
-  {id:2,driver:"Ama",origin:"Campus C",destination:"Campus D",datetime:"2025-11-17T10:30",seats:2,price:1.5},
-  {id:3,driver:"Kojo",origin:"Campus E",destination:"Campus F",datetime:"2025-11-17T11:00",seats:4,price:3}
+  {id:1,driver:"Kwame",origin:"Campus A",destination:"Campus B",datetime:"2025-11-17T09:00",seats:3,price:2, passengers:[]},
+  {id:2,driver:"Ama",origin:"Campus C",destination:"Campus D",datetime:"2025-11-17T10:30",seats:2,price:1.5, passengers:[]},
+  {id:3,driver:"Kojo",origin:"Campus E",destination:"Campus F",datetime:"2025-11-17T11:00",seats:4,price:3, passengers:[]}
 ];
 localStorage.setItem('rides', JSON.stringify(rides));
 }
@@ -116,10 +159,12 @@ function updateNav(){
     navLogin.style.display='none'; 
     navSignup.style.display='none'; 
     navLogout.style.display='inline-block'; 
+    navProfile.style.display='inline-block';
   } else { 
     navLogin.style.display='inline-block'; 
     navSignup.style.display='inline-block'; 
     navLogout.style.display='none'; 
+    navProfile.style.display='none';
   }
 }
 
@@ -152,11 +197,20 @@ document.getElementById('form-login').addEventListener('submit', e=>{
 });
 
 // ===== Logout =====
-navLogout.addEventListener('click', ()=>{ currentUser=null; localStorage.removeItem('currentUser'); dashboard.style.display='none'; updateNav(); });
+navLogout.addEventListener('click', ()=>{
+  if(confirm('Are you sure you want to logout?')){
+    currentUser=null; 
+    localStorage.removeItem('currentUser'); 
+    dashboard.style.display='none'; 
+    updateNav(); 
+  }
+});
 
 // ===== Dashboard =====
 function renderDashboard(){
-  dashboard.innerHTML=''; dashboard.style.display='block';
+  dashboard.innerHTML=''; 
+  dashboard.style.display='block';
+  document.getElementById('my-rides').style.display='block'; // Show My Rides
   if(currentUser.role==='driver'){
     const card = document.createElement('div'); card.className='card';
     card.innerHTML=`<h3>Driver Dashboard</h3>
@@ -172,35 +226,123 @@ function renderDashboard(){
     document.getElementById('form-ride').addEventListener('submit', e=>{
       e.preventDefault();
       const f=e.target;
-      const ride = { id:Date.now(), driver:currentUser.name, origin:f.origin.value, destination:f.destination.value, datetime:f.datetime.value, seats:f.seats.value, price:f.price.value };
+      const ride = { id:Date.now(), driver:currentUser.name, origin:f.origin.value, destination:f.destination.value, datetime:f.datetime.value, seats:parseInt(f.seats.value), price:parseFloat(f.price.value), passengers:[] };
       rides.push(ride);
       localStorage.setItem('rides', JSON.stringify(rides));
       alert('Ride posted!');
       f.reset();
       renderRides();
+      renderMyRides();
     });
   }
-  renderRides();
+  renderRides(searchOrigin.value, searchDestination.value);
+  renderMyRides();
 }
 
 // ===== Render Rides =====
-function renderRides(){
+function renderRides(filterOrigin='', filterDestination=''){
 ridesList.innerHTML='';
-if(rides.length===0){ ridesList.innerHTML='No rides available.'; return; }
-rides.forEach(r=>{
+let filtered = rides.filter(r=>{
+  return (!filterOrigin || r.origin.toLowerCase().includes(filterOrigin.toLowerCase())) &&
+         (!filterDestination || r.destination.toLowerCase().includes(filterDestination.toLowerCase()));
+});
+if(filtered.length===0){ ridesList.innerHTML='No rides available.'; return; }
+filtered.forEach(r=>{
   const div=document.createElement('div'); div.className='card';
+  const availableSeats = r.seats - r.passengers.length;
+  let statusText = 'Available';
+  if(r.passengers.includes(currentUser.email)) statusText = 'Booked by You';
+  else if(availableSeats===0) statusText = 'Full';
   div.innerHTML=`<p><strong>Driver:</strong> ${r.driver}</p>
   <p><strong>From:</strong> ${r.origin} <strong>To:</strong> ${r.destination}</p>
-  <p><strong>Date/Time:</strong> ${r.datetime}</p>
-  <p><strong>Seats:</strong> ${r.seats} <strong>Price:</strong>$${r.price}</p>`;
-  if(currentUser && currentUser.role==='passenger'){
-    const btn=document.createElement('button'); btn.className='btn btn-primary'; btn.textContent='Request Ride';
-    btn.addEventListener('click', ()=>{ alert(Ride requested from ${r.driver}!); });
+  <p><strong>Date/Time:</strong> ${new Date(r.datetime).toLocaleString()}</p>
+  <p><strong>Seats Available:</strong> ${availableSeats} <strong>Price:</strong> $${r.price}</p>
+  <p><strong>Status:</strong> ${statusText}</p>`;
+  if(currentUser.role==='passenger' && statusText==='Available'){
+    const btn=document.createElement('button'); 
+    btn.className='btn btn-primary'; 
+    btn.textContent='Request Ride';
+    btn.addEventListener('click', ()=>{
+      r.passengers.push(currentUser.email);
+      localStorage.setItem('rides', JSON.stringify(rides));
+      alert(Ride requested from ${r.driver}!);
+      renderRides(filterOrigin, filterDestination);
+      renderMyRides();
+    });
     div.appendChild(btn);
   }
   ridesList.appendChild(div);
 });
 }
+
+// ===== Render My Rides =====
+function renderMyRides(){
+  const container = document.getElementById('rides-history');
+  container.innerHTML='';
+  if(currentUser.role==='passenger'){
+    const booked = rides.filter(r=>r.passengers.includes(currentUser.email));
+    if(booked.length===0){ container.innerHTML='No rides booked yet.'; return; }
+    booked.forEach(r=>{
+      const div=document.createElement('div'); div.className='card';
+      div.innerHTML=`<p><strong>Driver:</strong> ${r.driver}</p>
+      <p><strong>From:</strong> ${r.origin} <strong>To:</strong> ${r.destination}</p>
+      <p><strong>Date/Time:</strong> ${new Date(r.datetime).toLocaleString()}</p>
+      <p><strong>Seats:</strong> ${r.seats} <strong>Price:</strong> $${r.price}</p>
+      <p><strong>Status:</strong> ${new Date(r.datetime) > new Date() ? 'Upcoming' : 'Completed'}</p>`;
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className='btn btn-edit'; cancelBtn.textContent='Cancel Booking';
+      cancelBtn.addEventListener('click', ()=>{
+        if(confirm('Cancel this ride?')){
+          r.passengers = r.passengers.filter(p=>p!==currentUser.email);
+          localStorage.setItem('rides', JSON.stringify(rides));
+          renderMyRides();
+          renderRides(searchOrigin.value, searchDestination.value);
+        }
+      });
+      div.appendChild(cancelBtn);
+      container.appendChild(div);
+    });
+  } else {
+    const myRides = rides.filter(r=>r.driver===currentUser.name);
+    if(myRides.length===0){ container.innerHTML='No rides posted yet.'; return; }
+    myRides.forEach(r=>{
+      const div=document.createElement('div'); div.className='card';
+      div.innerHTML=`<p><strong>From:</strong> ${r.origin} <strong>To:</strong> ${r.destination}</p>
+      <p><strong>Date/Time:</strong> ${new Date(r.datetime).toLocaleString()}</p>
+      <p><strong>Seats:</strong> ${r.seats} <strong>Price:</strong> $${r.price}</p>
+      <p><strong>Passengers:</strong> ${r.passengers.length>0 ? r.passengers.join(', ') : 'None'}</p>
+      <p><strong>Status:</strong> ${new Date(r.datetime) > new Date() ? 'Upcoming' : 'Completed'}</p>`;
+      container.appendChild(div);
+    });
+  }
+}
+
+// ===== Profile =====
+function showProfile(){
+  const f = document.getElementById('form-profile');
+  f.name.value = currentUser.name;
+  f.email.value = currentUser.email;
+  f.phone.value = currentUser.phone || '';
+  f.role.value = currentUser.role;
+}
+document.getElementById('form-profile').addEventListener('submit', e=>{
+  e.preventDefault();
+  const f = e.target;
+  currentUser.name = f.name.value;
+  currentUser.phone = f.phone.value;
+  currentUser.role = f.role.value;
+  users = users.map(u=>u.email===currentUser.email?currentUser:u);
+  localStorage.setItem('users', JSON.stringify(users));
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  alert('Profile updated!');
+  modalProfile.style.display='none';
+  renderDashboard();
+});
+
+// ===== Search =====
+searchBtn.addEventListener('click', ()=>{
+  renderRides(searchOrigin.value, searchDestination.value);
+});
 
 // ===== Initial Render =====
 updateNav();
