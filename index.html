@@ -102,6 +102,16 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
+    .product img {
+        width: 100%;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .product button {
+        margin-top: 8px;
+    }
+
     /* RESPONSIVE STYLING */
     @media (max-width: 768px) {
         header h1 {
@@ -143,33 +153,37 @@
     <p>Affordable Vegetables for Students</p>
 </header>
 
+<!-- ROLE SELECTION -->
 <div class="container" id="roleSelect">
     <h2>Choose Account Type</h2>
     <button onclick="chooseRole('seller')">I am a Seller</button>
     <button onclick="chooseRole('buyer')">I am a Buyer</button>
 </div>
 
+<!-- AUTH SECTION -->
 <div class="container" id="authSection" style="display:none;">
     <h2 id="authTitle">Login</h2>
     <input id="name" placeholder="Full Name">
     <input id="email" placeholder="Email">
     <input id="password" type="password" placeholder="Password">
+    <input id="whatsapp" placeholder="WhatsApp Number (for sellers)">
     <button onclick="registerUser()">Create Account</button>
     <button onclick="loginUser()">Login</button>
 </div>
 
-<!-- SELLER PANEL -->
+<!-- SELLER DASHBOARD -->
 <div class="container" id="sellerPanel">
     <h2>Seller Dashboard</h2>
     <input id="vegName" placeholder="Vegetable Name">
     <input id="vegPrice" placeholder="Price (GHC)">
+    <input type="file" id="vegImage" accept="image/*">
     <button onclick="addVegetable()">Add Vegetable</button>
 
     <h3>My Vegetables</h3>
     <div id="sellerProducts"></div>
 </div>
 
-<!-- BUYER PANEL -->
+<!-- BUYER DASHBOARD -->
 <div class="container" id="buyerPanel">
     <h2>Buyer Dashboard</h2>
     <h3>Available Vegetables</h3>
@@ -194,8 +208,13 @@ function registerUser() {
         name: document.getElementById("name").value,
         email: document.getElementById("email").value,
         pass: document.getElementById("password").value,
-        role: selectedRole
+        role: selectedRole,
+        whatsapp: selectedRole === 'seller' ? document.getElementById("whatsapp").value : null
     };
+
+    if(selectedRole==='seller' && !user.whatsapp){
+        return alert("Please provide your WhatsApp number!");
+    }
 
     localStorage.setItem(user.email, JSON.stringify(user));
     alert("Account created successfully!");
@@ -235,19 +254,46 @@ function showBuyerPanel() {
 function addVegetable() {
     let name = document.getElementById("vegName").value;
     let price = document.getElementById("vegPrice").value;
+    let imageInput = document.getElementById("vegImage");
 
-    let item = {
-        seller: currentUser,
-        name: name,
-        price: price
-    };
+    if (!name || !price) return alert("Please enter name and price!");
 
+    let sellerData = JSON.parse(localStorage.getItem(currentUser));
+    if (!sellerData.whatsapp) return alert("Seller WhatsApp not found!");
+
+    if (imageInput.files && imageInput.files[0]) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let item = {
+                seller: currentUser,
+                name: name,
+                price: price,
+                image: e.target.result,
+                whatsapp: sellerData.whatsapp
+            };
+            saveVegetable(item);
+        };
+        reader.readAsDataURL(imageInput.files[0]);
+    } else {
+        let item = {
+            seller: currentUser,
+            name: name,
+            price: price,
+            image: null,
+            whatsapp: sellerData.whatsapp
+        };
+        saveVegetable(item);
+    }
+}
+
+function saveVegetable(item) {
     let all = JSON.parse(localStorage.getItem("market") || "[]");
     all.push(item);
-
     localStorage.setItem("market", JSON.stringify(all));
     alert("Vegetable added!");
-
+    document.getElementById("vegName").value = "";
+    document.getElementById("vegPrice").value = "";
+    document.getElementById("vegImage").value = "";
     loadSellerProducts();
 }
 
@@ -260,6 +306,7 @@ function loadSellerProducts() {
 
     myList.forEach(v => {
         box.innerHTML += `<div class='product'>
+            ${v.image ? <img src="${v.image}"> : ""}
             <b>${v.name}</b> - GHC ${v.price}
         </div>`;
     });
@@ -272,11 +319,20 @@ function loadMarket() {
 
     all.forEach(v => {
         box.innerHTML += `<div class='product'>
+            ${v.image ? <img src="${v.image}"> : ""}
             <b>${v.name}</b> <br>
             Price: GHC ${v.price}<br>
-            Seller: ${v.seller}
+            Seller: ${v.seller}<br>
+            <button onclick="buyWhatsApp('${v.whatsapp}','${v.name}','${v.price}')">Buy on WhatsApp</button>
         </div>`;
     });
+}
+
+function buyWhatsApp(number, product, price) {
+    if (!number) return alert("Seller has not provided WhatsApp!");
+    let msg = Hello, I want to buy "${product}" for GHC ${price};
+    let url = https://wa.me//+233538387529/${number}?text=${encodeURIComponent(msg)};
+    window.open(url, "_blank");
 }
 </script>
 
