@@ -5,73 +5,127 @@
 <title>FreshBite Campus Market</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+/* Basic Reset and Styling */
 body {font-family: Arial, sans-serif; margin:0; background:#f7f7f7;}
 header {
-    background: url('logo.jpg') no-repeat center center;
+    /* Placeholder for the logo/banner image. Use a real image path or remove the background property if not needed. */
+    background: url('https://via.placeholder.com/800x200/4CAF50/FFFFFF?text=FreshBite+Market') no-repeat center center;
     background-size: cover;
     color:white;
     padding:100px 20px;
     text-align:center;
 }
-header h1, header p { text-shadow: 2px 2px 4px rgba(0,0,0,0.6); }
+header h1, header p { 
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8); 
+    color: white; 
+    font-weight: 900;
+}
 
-.container {width:90%; max-width:800px; margin:25px auto; background:white; padding:25px; border-radius:10px; box-shadow:0 0 10px #ccc;}
-button, input {width:100%; padding:12px; margin:8px 0; border-radius:5px;}
-button {background:#4CAF50; color:white; cursor:pointer; font-weight:bold; border:none;}
+.container {width:90%; max-width:800px; margin:25px auto; background:white; padding:25px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
+button, input[type="text"], input[type="file"], input[placeholder] {
+    width:100%; 
+    padding:12px; 
+    margin:8px 0; 
+    border-radius:5px;
+    box-sizing: border-box; /* Important for full width */
+}
+button {
+    background:#4CAF50; 
+    color:white; 
+    cursor:pointer; 
+    font-weight:bold; 
+    border:none;
+    transition: background-color 0.3s;
+}
+button:hover {
+    background: #45a049;
+}
+
+/* Panel Display */
 #sellerPanel, #buyerPanel {display:none;}
+
+/* Product Layout */
 .product-grid {display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:15px;}
-.product {background:#f1f1f1; padding:10px; border-radius:5px; text-align:center; overflow:hidden;}
-.product img {width:100%; max-height:150px; object-fit:cover; border-radius:5px;}
-.cart-item {background:#e8f5e9; padding:10px; margin:10px 0; border-radius:5px; display:flex; align-items:center; justify-content:space-between;}
-.cart-item img {width:50px; height:50px; object-fit:cover; border-radius:5px;}
-.cart-total {font-weight:bold; margin-top:10px;}
-.gallery {display:flex; overflow-x:auto; gap:5px;}
-.gallery img {width:100px; height:100px; object-fit:cover; border-radius:5px; flex-shrink:0;}
-#searchInput {margin-bottom:10px; padding:10px; border:1px solid #ccc; border-radius:5px;}
+.product {
+    background:#f1f1f1; 
+    padding:10px; 
+    border-radius:5px; 
+    text-align:center; 
+    overflow:hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.product img {width:100%; max-height:100px; object-fit:cover; border-radius:5px; margin-bottom: 5px;}
+.cart-item {
+    background:#e8f5e9; 
+    padding:10px; 
+    margin:10px 0; 
+    border-radius:5px; 
+    display:flex; 
+    align-items:center; 
+    justify-content:space-between;
+}
+.cart-item img {width:50px; height:50px; object-fit:cover; border-radius:5px; margin-right: 10px;}
+.cart-item button {width: auto; padding: 5px 10px; margin: 0;}
+
+.cart-total {font-weight:bold; margin-top:10px; font-size: 1.2em;}
+.gallery {display:flex; overflow-x:auto; gap:5px; margin-bottom: 5px;}
+.gallery img {width:80px; height:80px; object-fit:cover; border-radius:5px; flex-shrink:0;}
+#searchInput {margin-bottom:10px;}
 </style>
 </head>
 <body>
 
 <header>
-<h1>FreshBite Campus Market</h1>
-<p>Affordable Vegetables for Students</p>
+    <h1>FreshBite Campus Market</h1>
+    <p>Affordable Vegetables for Students</p>
+    <p>Eat Fresh. Live Smart.</p>
 </header>
 
 <div class="container" id="roleSelect">
-<h2>Choose Your Role</h2>
-<button type="button" onclick="chooseRole('seller')">I am a Seller</button>
-<button type="button" onclick="chooseRole('buyer')">I am a Buyer</button>
+    <h2>Choose Your Role</h2>
+    <button type="button" onclick="chooseRole('seller')">I am a Seller</button>
+    <button type="button" onclick="chooseRole('buyer')">I am a Buyer</button>
 </div>
 
-<!-- SELLER PANEL -->
 <div class="container" id="sellerPanel">
-<h2>Seller Dashboard</h2>
-<input id="vegName" placeholder="Vegetable Name">
-<input id="vegPrice" placeholder="Price (GHC)">
-<input type="file" id="vegImages" multiple accept="image/*">
-<input type="hidden" id="editIndex">
-<button type="button" onclick="addOrUpdateVegetable()">Add / Update Vegetable</button>
-<h3>My Products</h3>
-<div id="sellerProducts" class="product-grid"></div>
+    <h2>Seller Dashboard</h2>
+    <input type="text" id="vegName" placeholder="Vegetable Name">
+    <input type="number" id="vegPrice" placeholder="Price (GHC)" step="0.01">
+    <input type="file" id="vegImages" multiple accept="image/*">
+    <input type="hidden" id="editIndex">
+    <button type="button" onclick="addOrUpdateVegetable()">Add / Update Vegetable</button>
+    <h3>My Products</h3>
+    <div id="sellerProducts" class="product-grid"></div>
 </div>
 
-<!-- BUYER PANEL -->
 <div class="container" id="buyerPanel">
-<h2>Buyer Dashboard</h2>
-<input type="text" id="searchInput" placeholder="Search products..." oninput="searchProducts()">
-<h3>Available Products</h3>
-<div id="marketProducts" class="product-grid"></div>
-<h3>Cart</h3>
-<div id="cartItems"></div>
-<div class="cart-total" id="cartTotal"></div>
-<button type="button" onclick="checkoutCart()">Checkout</button>
+    <h2>Buyer Dashboard</h2>
+    <input type="text" id="searchInput" placeholder="Search products..." oninput="searchProducts()">
+    <h3>Available Products</h3>
+    <div id="marketProducts" class="product-grid"></div>
+    <h3>Cart</h3>
+    <div id="cartItems"></div>
+    <div class="cart-total" id="cartTotal">Total: GHC 0.00</div>
+    <button type="button" onclick="checkoutCart()">Checkout</button>
 </div>
 
 <script>
+// Global state variables
 window.cart = [];
-window.filteredMarket = [];
+window.market = JSON.parse(localStorage.getItem("market")||"[]");
+window.filteredMarket = [...window.market];
 
-// --- Role selection ---
+// --- Utility: Convert file to Base64 (needed for storing images in localStorage) ---
+function fileToBase64(file){ 
+    return new Promise((res,rej)=>{ 
+        let reader = new FileReader(); 
+        reader.onload=()=>res(reader.result); 
+        reader.onerror=rej; 
+        reader.readAsDataURL(file); 
+    }); 
+}
+
+// --- Role selection (The main fix) ---
 window.chooseRole = function(role){
     document.getElementById("roleSelect").style.display = "none";
     if(role === "seller") {
@@ -85,99 +139,182 @@ window.chooseRole = function(role){
 }
 
 // --- Seller functionality ---
+
+// Helper to save market data
+function saveMarket(){
+    localStorage.setItem("market", JSON.stringify(window.market));
+    window.filteredMarket = [...window.market]; // Keep filtered market updated
+}
+
 window.addOrUpdateVegetable = async function(){
-    let name = document.getElementById("vegName").value;
+    let name = document.getElementById("vegName").value.trim();
     let price = document.getElementById("vegPrice").value;
     let files = document.getElementById("vegImages").files;
-    if(!name || !price){ alert("Enter name and price!"); return; }
+    
+    if(!name || !price || isNaN(price)){ 
+        alert("Please enter a valid name and price!"); 
+        return; 
+    }
+    
     let images=[];
-    for(let f of files){ images.push(await fileToBase64(f)); }
-
-    let market = JSON.parse(localStorage.getItem("market")||"[]");
     let editIndex = document.getElementById("editIndex").value;
-    if(editIndex!==""){ market[editIndex] = {name, price, images: images.length?images:market[editIndex].images}; document.getElementById("editIndex").value=""; }
-    else{ market.push({name, price, images}); }
-    localStorage.setItem("market", JSON.stringify(market));
-    document.getElementById("vegName").value=""; document.getElementById("vegPrice").value=""; document.getElementById("vegImages").value="";
+    
+    if(files.length > 0) {
+        // New images provided: convert them
+        for(let f of files){ images.push(await fileToBase64(f)); }
+    }
+    
+    if(editIndex !== ""){ 
+        // EDIT MODE
+        let existingItem = window.market[parseInt(editIndex)];
+        window.market[parseInt(editIndex)] = {
+            name: name, 
+            price: parseFloat(price).toFixed(2), 
+            // Use new images if provided, otherwise keep existing ones
+            images: images.length ? images : existingItem.images
+        }; 
+        document.getElementById("editIndex").value = ""; 
+    } else {
+        // ADD MODE
+        if (images.length === 0) {
+            alert("Please select at least one image for a new product.");
+            return;
+        }
+        window.market.push({
+            name: name, 
+            price: parseFloat(price).toFixed(2), 
+            images: images
+        }); 
+    }
+    
+    saveMarket();
+    // Clear form fields
+    document.getElementById("vegName").value=""; 
+    document.getElementById("vegPrice").value=""; 
+    document.getElementById("vegImages").value="";
     loadSellerProducts();
 }
 
 window.loadSellerProducts = function(){
-    let market = JSON.parse(localStorage.getItem("market")||"[]");
-    let box = document.getElementById("sellerProducts"); box.innerHTML="";
-    market.forEach((v,i)=>{
-        let html=<div class="product"><b>${v.name}</b><br>GHC ${v.price}<div class="gallery">;
-        v.images.forEach(img=>{ html+=<img src='${img}'>; });
-        html+=</div><button type="button" onclick='editVegetable(${i})'>Edit</button> <button type="button" onclick='deleteVegetable(${i})'>Delete</button></div>;
+    let box = document.getElementById("sellerProducts"); 
+    box.innerHTML="";
+    window.market.forEach((v,i)=>{
+        let firstImage = v.images[0] || '';
+        let html=`
+            <div class="product">
+                <b>${v.name}</b><br>GHC ${v.price}
+                <div class="gallery">
+                    ${v.images.map(img=><img src='${img}' alt='${v.name} image'>).join('')}
+                </div>
+                <button type="button" onclick='editVegetable(${i})'>Edit</button> 
+                <button type="button" onclick='deleteVegetable(${i})' style="background:#f44336;">Delete</button>
+            </div>`;
         box.innerHTML+=html;
     });
 }
 
 window.editVegetable = function(i){
-    let market = JSON.parse(localStorage.getItem("market")||"[]");
-    document.getElementById("vegName").value = market[i].name;
-    document.getElementById("vegPrice").value = market[i].price;
+    let item = window.market[i];
+    document.getElementById("vegName").value = item.name;
+    document.getElementById("vegPrice").value = item.price;
     document.getElementById("editIndex").value = i;
+    alert(Editing ${item.name}. Change the image file only if you want to replace existing images.);
 }
 
 window.deleteVegetable = function(i){
     if(!confirm("Delete this product?")) return;
-    let market = JSON.parse(localStorage.getItem("market")||"[]");
-    market.splice(i,1); localStorage.setItem("market", JSON.stringify(market));
+    window.market.splice(i,1); 
+    saveMarket();
     loadSellerProducts();
 }
 
 // --- Buyer functionality ---
 window.loadMarket = function(){
-    let market = JSON.parse(localStorage.getItem("market")||"[]");
-    window.filteredMarket = [...market];
-    displayMarket(window.filteredMarket);
+    displayMarket(window.market); // Initially display the full market
 }
 
-window.displayMarket = function(market){
-    let box = document.getElementById("marketProducts"); box.innerHTML="";
-    market.forEach((v,i)=>{
-        let html=<div class="product"><b>${v.name}</b><br>GHC ${v.price}<div class="gallery">;
-        v.images.forEach(img=>{ html+=<img src='${img}'>; });
-        html+=</div><button type="button" onclick='addToCart(${i})'>Add to Cart</button></div>;
+window.displayMarket = function(marketToDisplay){
+    let box = document.getElementById("marketProducts"); 
+    box.innerHTML="";
+    if (marketToDisplay.length === 0) {
+        box.innerHTML = "<p>No products available right now.</p>";
+        return;
+    }
+    
+    marketToDisplay.forEach((v,i)=>{
+        let html=`
+            <div class="product">
+                <b>${v.name}</b><br>GHC ${v.price}
+                <div class="gallery">
+                    ${v.images.map(img=><img src='${img}' alt='${v.name} image'>).join('')}
+                </div>
+                <button type="button" onclick='addToCart(${i})'>Add to Cart</button>
+            </div>`;
         box.innerHTML+=html;
     });
 }
 
 // --- Search products ---
 window.searchProducts = function(){
-    let term = document.getElementById("searchInput").value.toLowerCase();
-    let market = JSON.parse(localStorage.getItem("market")||"[]");
-    window.filteredMarket = market.filter(p=>p.name.toLowerCase().includes(term));
+    let term = document.getElementById("searchInput").value.toLowerCase().trim();
+    
+    // Filter the original market data
+    window.filteredMarket = window.market.filter(p=>p.name.toLowerCase().includes(term));
+    
     displayMarket(window.filteredMarket);
 }
 
 // --- Cart ---
 window.addToCart = function(i){
+    // i is the index in the current window.filteredMarket array
     let product = window.filteredMarket[i]; 
-    window.cart.push({...product});
+    
+    // Push a copy to the cart
+    window.cart.push({...product}); 
     loadCart();
 }
+
 window.loadCart = function(){
-    let box = document.getElementById("cartItems"); box.innerHTML="";
+    let box = document.getElementById("cartItems"); 
+    box.innerHTML="";
     let total = 0;
+    
     window.cart.forEach((item,i)=>{
         total += Number(item.price);
-        box.innerHTML += <div class="cart-item">${item.name} - GHC ${item.price}<img src="${item.images[0]||''}"><button type="button" onclick="removeFromCart(${i})">Remove</button></div>;
+        box.innerHTML += `
+            <div class="cart-item">
+                <div style="display:flex; align-items:center;">
+                    <img src="${item.images[0]||''}" alt="Cart item image">
+                    <span>${item.name} - GHC ${item.price}</span>
+                </div>
+                <button type="button" onclick="removeFromCart(${i})" style="background:#f44336; margin-left:10px;">Remove</button>
+            </div>`;
     });
-    document.getElementById("cartTotal").innerText = "Total: GHC " + total;
+    
+    document.getElementById("cartTotal").innerText = "Total: GHC " + total.toFixed(2);
 }
-window.removeFromCart = function(i){ window.cart.splice(i,1); loadCart(); }
+
+window.removeFromCart = function(i){ 
+    window.cart.splice(i,1); 
+    loadCart(); 
+}
+
 window.checkoutCart = function(){
-    if(window.cart.length===0){ alert("Cart is empty!"); return; }
-    alert("Order confirmed!");
+    if(window.cart.length===0){ 
+        alert("Cart is empty!"); 
+        return; 
+    }
+    alert(Order confirmed!\nTotal Items: ${window.cart.length}\nTotal Cost: GHC ${document.getElementById("cartTotal").innerText.split(' ')[2]});
     window.cart = [];
     loadCart();
 }
 
-// --- Utility ---
-function fileToBase64(file){ return new Promise((res,rej)=>{ let reader = new FileReader(); reader.onload=()=>res(reader.result); reader.onerror=rej; reader.readAsDataURL(file); }); }
-
+// Initialize the market data when the page loads
+// This ensures that if localStorage is empty, market is an empty array
+window.onload = function() {
+    window.market = JSON.parse(localStorage.getItem("market")||"[]");
+    window.filteredMarket = [...window.market];
+};
 </script>
 </body>
 </html>
