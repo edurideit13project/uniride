@@ -15,9 +15,24 @@
 
         header {
             text-align: center;
-            background: #28a745;
+            /* Use your flyer as the background */
+            background: url('images/logo.jpg') no-repeat center center;
+            background-size: cover;
             color: white;
-            padding: 20px;
+            padding: 60px 20px; /* Increased padding for better visibility */
+            position: relative;
+        }
+
+        /* Optional: add a semi-transparent overlay to make text readable */
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4); /* Adjust opacity if needed */
+            z-index: 0;
         }
 
         header img.logo {
@@ -25,6 +40,14 @@
             height: 80px;
             object-fit: cover;
             border-radius: 50%;
+            position: relative;
+            z-index: 1;
+        }
+
+        header h1, header p {
+            position: relative;
+            z-index: 1;
+            margin: 10px 0 0 0;
         }
 
         .role-selection {
@@ -144,7 +167,6 @@
                     <option value="Vegetables">Vegetables</option>
                     <option value="Snacks">Snacks</option>
                     <option value="Drinks">Drinks</option>
-                    <option value="Fruits">Fruits</option>
                     <option value="Others">Others</option>
                 </select>
                 <input type="file" id="productImage" accept="image/*" required>
@@ -163,7 +185,6 @@
                 <option value="Vegetables">Vegetables</option>
                 <option value="Snacks">Snacks</option>
                 <option value="Drinks">Drinks</option>
-                <option value="Fruits">Fruits</option>
                 <option value="Others">Others</option>
             </select>
             <div id="buyerProducts" class="product-grid"></div>
@@ -181,27 +202,7 @@
         const searchInput = document.getElementById('searchInput');
         const categoryFilter = document.getElementById('categoryFilter');
 
-        // Starter products
-        let starterProducts = [
-            {sellerName:"FreshBite Admin", name:"Apple", price:5, category:"Fruits", image:"images/apple.jpg", whatsapp:"233501234567"},
-            {sellerName:"FreshBite Admin", name:"Banana", price:4, category:"Fruits", image:"images/banana.jpg", whatsapp:"233501234567"},
-            {sellerName:"FreshBite Admin", name:"Carrots", price:3, category:"Vegetables", image:"images/carrots.jpg", whatsapp:"233501234567"},
-            {sellerName:"FreshBite Admin", name:"Instant Noodles", price:3, category:"Snacks", image:"images/noodles.jpg", whatsapp:"233501234567"},
-            {sellerName:"FreshBite Admin", name:"Chips", price:2, category:"Snacks", image:"images/chips.jpg", whatsapp:"233501234567"},
-            {sellerName:"FreshBite Admin", name:"Bottled Water", price:2, category:"Drinks", image:"images/water.jpg", whatsapp:"233501234567"},
-            {sellerName:"FreshBite Admin", name:"Soda Drink", price:4, category:"Drinks", image:"images/soda.jpg", whatsapp:"233501234567"},
-            {sellerName:"FreshBite Admin", name:"Bread Loaf", price:5, category:"Others", image:"images/bread.jpg", whatsapp:"233501234567"},
-            {sellerName:"FreshBite Admin", name:"Eggs (6pcs)", price:6, category:"Others", image:"images/eggs.jpg", whatsapp:"233501234567"},
-            {sellerName:"FreshBite Admin", name:"Orange Juice", price:5, category:"Drinks", image:"images/juice.jpg", whatsapp:"233501234567"}
-        ];
-
-        // Load from localStorage or starter
-        let products = JSON.parse(localStorage.getItem('products')) || starterProducts;
-
-        // Save to localStorage if empty
-        if(!localStorage.getItem('products')) {
-            localStorage.setItem('products', JSON.stringify(products));
-        }
+        let products = JSON.parse(localStorage.getItem('products')) || [];
 
         buyerBtn.addEventListener('click', () => {
             sellerSection.classList.add('hidden');
@@ -230,7 +231,6 @@
                     products.push(product);
                     localStorage.setItem('products', JSON.stringify(products));
                     displaySellerProducts();
-                    displayBuyerProducts();
                     sellerForm.reset();
                 }
                 reader.readAsDataURL(imageFile);
@@ -283,7 +283,6 @@
         searchInput.addEventListener('input', displayBuyerProducts);
         categoryFilter.addEventListener('change', displayBuyerProducts);
 
-        // Initial display
         displaySellerProducts();
         displayBuyerProducts();
     </script>
